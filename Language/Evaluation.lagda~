@@ -1,0 +1,12 @@
+------------------------------------------------------------------------
+--
+-- Public module for the small-step evaluation relation ⟶
+--
+------------------------------------------------------------------------
+
+\begin{code}
+module AbstractMachines.Evaluation (Expr : Set) (_⟶_ : Expr → Expr → Set) where
+
+open import AbstractMachines.Evaluation.Definition public
+open import AbstractMachines.Evaluation.Properties public
+\end{code}

@@ -1,0 +1,39 @@
+
+\begin{code}
+module AbstractMachines.Language.Substitution where
+
+open import AbstractMachines.Language.Types
+\end{code}
+
+\begin{code}
+private variable
+  Γ Δ : Context
+  T   : Type
+\end{code}
+
+--------------------------------------------------------------------------------
+
+Substitution relation
+Instead of using a function T ∈ Γ → Δ ⊢ T that translate a variable from
+context Γ to a term with context Δ, we use a substitution relation.
+Γ ↷ Δ says that context Δ can be substituted by context Γ.
+This allows doing proofs about substiutions.
+<Sub-Relation>
+\begin{code}
+data _↷_ (Γ : Context) : Context → Set where
+  ∅    : Γ ↷ ∅
+  _,_  : Γ ↷ Δ → (Γ ⊢ T) → Γ ↷ (Δ , T)
+\end{code}
+
+TODO: needs extend
+sub : ∀ {Γ Δ T} → Γ ↷ Δ → (Δ ⊢ T) → (Γ ⊢ T)
+sub σ true = true
+sub σ false = false
+sub σ (if t₁ then t₂ else t₃) = if sub σ t₁ then sub σ t₂ else sub σ t₃
+sub σ (x N) = x N
+sub σ (l ⟨ ⊕ ⟩ᵃ r) = sub σ l ⟨ ⊕ ⟩ᵃ sub σ r
+sub σ (l ⟨ ⊕ ⟩ᶜ r) = sub σ l ⟨ ⊕ ⟩ᶜ sub σ r
+sub σ (let' t₁ in' t₂) = let' sub σ t₁ in' sub (extend σ) t₂
+sub σ (′ x) = ↷ⱽ σ x
+sub σ (ƛ t) = ƛ sub (extend σ) t
+sub σ (t₁ · t₂) = sub σ t₁ · sub σ t₂

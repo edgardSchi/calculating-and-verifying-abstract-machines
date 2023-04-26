@@ -1,0 +1,39 @@
+------------------------------------------------------------------------
+--
+-- Module for printing parts of the language
+--
+------------------------------------------------------------------------
+
+\begin{code}
+module AbstractMachines.Language.Show where
+
+open import AbstractMachines.Language
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Nat.Show using (show)
+open import Data.String using (String; _++_)
+\end{code}
+
+<Show-Type>
+\begin{code}
+showType : Type → String
+showType (t₁ ⇒ t₂) = "(" ++ showType t₁ ++ " → " ++ showType t₂ ++ ")"
+showType Nat = "Nat"
+showType Bool = "Bool"
+\end{code}
+
+\begin{code}
+showValue : ∀ {Γ T} {t : Γ ⊢ T} → Value t → String
+showValue (V-ƛ {T₁ = T₁} {T₂ = T₂}) = "λ : " ++ showType (T₁ ⇒ T₂)  
+showValue V-true = "TRUE"
+showValue V-false = "FALSE"
+showValue (V-N {n = n}) = show n
+\end{code}
+
+showEval : ∀ {T} → (t : ∅ ⊢ T) → String
+showEval term with eval 100 term
+... | steps x (done v) = val→String v
+... | steps x out-of-gas = "OUT-OF-GAS"
+
+
+

@@ -1,0 +1,35 @@
+------------------------------------------------------------------------
+--
+-- Module showing well-scoped DeBruijn terms
+--
+------------------------------------------------------------------------
+\begin{code}
+module AbstractMachines.Language.Well-Scoped where
+
+open import Data.Nat using (ℕ; suc; zero; _+_)
+open import Data.Fin using (Fin)
+\end{code}
+
+<Term-Definition>
+\begin{code}
+data Term (n : ℕ) : Set where
+  Var  : Fin n → Term n
+  Lam  : Term (1 + n) → Term n
+  App  : Term n → Term n → Term n
+\end{code}
+
+\begin{code}
+_ : Term 0
+_ = Lam (App (Var Fin.zero) (Var Fin.zero))
+
+test : Term 0
+test = Lam (App (Var Fin.zero) (Var Fin.zero))
+
+ClosedTerm : Set
+ClosedTerm = Term 0
+
+close : ∀ {n} → Term n → ClosedTerm
+close {zero} term = term
+close {suc n} term = close (Lam term)
+\end{code}
+

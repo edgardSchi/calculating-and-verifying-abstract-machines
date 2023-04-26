@@ -1,0 +1,133 @@
+
+\begin{code}
+module AbstractMachines.Language.Weakening where
+
+open import AbstractMachines.Language.Types
+open import Relation.Binary.PropositionalEquality as EQ
+open EQ using (_≡_; refl; sym; _≢_; cong)
+\end{code}
+
+--------------------------------------------------------------------------------
+
+\begin{code}
+private variable
+  Γ Δ Ε Ζ : Context
+  T       : Type
+\end{code}
+
+Weakening of variables
+<Weaken-Var>
+\begin{code}
+weakenⱽ : Γ ⊆ Δ → T ∈ Γ → T ∈ Δ
+weakenⱽ (drop Γ⊆Δ) var      = S weakenⱽ Γ⊆Δ var
+weakenⱽ (copy Γ⊆Δ) Z        = Z
+weakenⱽ (copy Γ⊆Δ) (S var)  = S weakenⱽ Γ⊆Δ var
+\end{code}
+
+Weakening of the context
+<Weaken>
+\begin{code}
+weaken : Γ ⊆ Δ → (Γ ⊢ T) → (Δ ⊢ T)
+weaken Γ⊆Δ (if t₁ then t₂ else t₃)
+  = if weaken Γ⊆Δ t₁ then weaken Γ⊆Δ t₂ else weaken Γ⊆Δ t₃
+weaken Γ⊆Δ (let' t₁ in' t₂)
+  = let' weaken Γ⊆Δ t₁ in' weaken (copy Γ⊆Δ) t₂
+weaken Γ⊆Δ true            = true
+weaken Γ⊆Δ false           = false
+weaken Γ⊆Δ (x N)           = x N
+weaken Γ⊆Δ (t₁ ⟨ ⊕ ⟩ᵃ t₂)  = (weaken Γ⊆Δ t₁) ⟨ ⊕ ⟩ᵃ (weaken Γ⊆Δ t₂)
+weaken Γ⊆Δ (t₁ ⟨ ⊗ ⟩ᶜ t₂)  = (weaken Γ⊆Δ t₁) ⟨ ⊗ ⟩ᶜ (weaken Γ⊆Δ t₂)
+weaken Γ⊆Δ (′ x)           = ′ weakenⱽ Γ⊆Δ x
+weaken Γ⊆Δ (ƛ t)           = ƛ weaken (copy Γ⊆Δ) t
+weaken Γ⊆Δ (t₁ · t₂)       = weaken Γ⊆Δ t₁ · weaken Γ⊆Δ t₂
+\end{code}
+
+Double weakening of variables is reflexive
+\begin{code}
+wk-wk≡reflⱽ : (Δ⊆Γ : Δ ⊆ Γ)
+            → (Ε⊆Δ : Ε ⊆ Δ)
+            → (x : T ∈ Ε)
+            → weakenⱽ Δ⊆Γ (weakenⱽ Ε⊆Δ x) ≡ weakenⱽ (⊆-refl Ε⊆Δ Δ⊆Γ) x
+wk-wk≡reflⱽ (drop Δ⊆Γ) (drop Ε⊆Δ) x
+  rewrite wk-wk≡reflⱽ Δ⊆Γ (drop  Ε⊆Δ) x  = refl
+wk-wk≡reflⱽ (drop Δ⊆Γ) (copy Ε⊆Δ) x
+  rewrite wk-wk≡reflⱽ Δ⊆Γ (copy  Ε⊆Δ) x  = refl
+wk-wk≡reflⱽ (copy Δ⊆Γ) (drop Ε⊆Δ) x
+  rewrite wk-wk≡reflⱽ Δ⊆Γ Ε⊆Δ x          = refl
+wk-wk≡reflⱽ (copy Δ⊆Γ) (copy Ε⊆Δ) Z      = refl
+wk-wk≡reflⱽ (copy Δ⊆Γ) (copy Ε⊆Δ) (S x)
+  rewrite wk-wk≡reflⱽ Δ⊆Γ Ε⊆Δ x          = refl
+\end{code}
+
+Double weakening is reflexive
+\begin{code}
+wk-wk≡refl : (Δ⊆Γ : Δ ⊆ Γ)
+           → (Ε⊆Δ : Ε ⊆ Δ)
+           → (t : Ε ⊢ T)
+           → weaken Δ⊆Γ (weaken Ε⊆Δ t) ≡ weaken (⊆-refl Ε⊆Δ Δ⊆Γ) t
+wk-wk≡refl Δ⊆Γ Ε⊆Δ true
+  = refl
+wk-wk≡refl Δ⊆Γ Ε⊆Δ false
+  = refl
+wk-wk≡refl Δ⊆Γ Ε⊆Δ (if t₁ then t₂ else t₃)
+  rewrite wk-wk≡refl Δ⊆Γ Ε⊆Δ t₁ | wk-wk≡refl Δ⊆Γ Ε⊆Δ t₂ | wk-wk≡refl Δ⊆Γ Ε⊆Δ t₃
+  = refl
+wk-wk≡refl Δ⊆Γ Ε⊆Δ (x N)
+  = refl
+wk-wk≡refl Δ⊆Γ Ε⊆Δ (l ⟨ ⊕ ⟩ᵃ r)
+  rewrite wk-wk≡refl Δ⊆Γ Ε⊆Δ l | wk-wk≡refl Δ⊆Γ Ε⊆Δ r
+  = refl
+wk-wk≡refl Δ⊆Γ Ε⊆Δ (l ⟨ ⊗ ⟩ᶜ r)
+  rewrite wk-wk≡refl Δ⊆Γ Ε⊆Δ l | wk-wk≡refl Δ⊆Γ Ε⊆Δ r
+  = refl
+wk-wk≡refl Δ⊆Γ Ε⊆Δ (t₁ · t₂)
+  rewrite wk-wk≡refl Δ⊆Γ Ε⊆Δ t₁ | wk-wk≡refl Δ⊆Γ Ε⊆Δ t₂
+  = refl
+wk-wk≡refl Δ⊆Γ Ε⊆Δ (let' t₁ in' t₂)
+  rewrite wk-wk≡refl Δ⊆Γ Ε⊆Δ t₁ | wk-wk≡refl (copy Δ⊆Γ) (copy Ε⊆Δ) t₂
+  = refl
+wk-wk≡refl Δ⊆Γ Ε⊆Δ (ƛ t)
+  rewrite wk-wk≡refl (copy Δ⊆Γ) (copy Ε⊆Δ) t
+  = refl
+wk-wk≡refl Δ⊆Γ Ε⊆Δ (′ x)
+  rewrite wk-wk≡reflⱽ Δ⊆Γ Ε⊆Δ x
+  = refl
+\end{code}
+
+Weakening of the context of a variable x : T ∈ Γ with the Γ ⊆ Γ yields x again
+\begin{code}
+wk-id≡reflⱽ : (x : T ∈ Γ) → weakenⱽ ⊆-id x ≡ x
+wk-id≡reflⱽ Z                            = refl
+wk-id≡reflⱽ (S x) rewrite wk-id≡reflⱽ x  = refl
+\end{code}
+
+Weakening of the context of a term t : Γ ⊢ T with the Γ ⊆ Γ yields t again
+\begin{code}
+wk-id≡refl : (t : Γ ⊢ T) → weaken ⊆-id t ≡ t
+wk-id≡refl true
+  = refl
+wk-id≡refl false
+  = refl
+wk-id≡refl (if t₁ then t₂ else t₃)
+  rewrite wk-id≡refl t₁ | wk-id≡refl t₂ | wk-id≡refl t₃
+  = refl
+wk-id≡refl (x N) = refl
+wk-id≡refl (l ⟨ ⊕ ⟩ᵃ r)
+  rewrite wk-id≡refl l | wk-id≡refl r
+  = refl
+wk-id≡refl (l ⟨ ⊗ ⟩ᶜ r)
+  rewrite wk-id≡refl l | wk-id≡refl r
+  = refl
+wk-id≡refl (let' t₁ in' t₂)
+  rewrite wk-id≡refl t₁ | wk-id≡refl t₂
+  = refl
+wk-id≡refl (′ x)
+  rewrite wk-id≡reflⱽ x
+  = refl
+wk-id≡refl (ƛ t)
+  rewrite wk-id≡refl t
+  = refl
+wk-id≡refl (t₁ · t₂)
+  rewrite wk-id≡refl t₁ | wk-id≡refl t₂
+  = refl
+\end{code}

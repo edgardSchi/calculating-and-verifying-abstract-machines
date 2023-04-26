@@ -1,0 +1,90 @@
+
+\begin{code}
+module AbstractMachines.Language.Types where
+
+open import Data.Nat using (ℕ; suc; zero; _≤?_)
+open import Relation.Nullary.Decidable using (True; toWitness)
+\end{code}
+
+\begin{code}
+infixr 7 _⇒_
+infix 4 _⊢_
+\end{code}
+
+<Type>
+\begin{code}
+data Type : Set where
+  _⇒_  : Type → Type → Type
+  Nat  : Type
+  Bool : Type
+\end{code}
+
+\begin{code}
+open import AbstractMachines.Language.BinaryOperation public
+open import AbstractMachines.Context Type public
+\end{code}
+
+\begin{code}
+private variable
+  Γ Δ      : Context
+  T T₁ T₂  : Type
+\end{code}
+
+Intrisically typed terms using DeBruijn indices.
+Based on the PLFA chapter "DeBruijn"
+<Typing-Judgment>
+\begin{code}
+data _⊢_ : Context → Type → Set where
+  true           : Γ ⊢ Bool
+
+  false          : Γ ⊢ Bool
+
+  if_then_else_  : Γ ⊢ Bool
+                 → Γ ⊢ T
+                 → Γ ⊢ T
+                 ----------------
+                 → Γ ⊢ T
+
+  _N             : ∀ (n : ℕ)
+                 ----------------
+                 → Γ ⊢ Nat
+
+  _⟨_⟩ᵃ_         : Γ ⊢ Nat
+                 → ArithmeticOp
+                 → Γ ⊢ Nat
+                 ----------------
+                 → Γ ⊢ Nat 
+
+  _⟨_⟩ᶜ_         : Γ ⊢ Nat
+                 → CompareOp
+                 → Γ ⊢ Nat
+                 ----------------
+                 → Γ ⊢ Bool
+
+  let'_in'_      : Γ ⊢ T₁
+                 → (Γ , T₁) ⊢ T₂
+                 ----------------
+                 → Γ ⊢ T₂
+
+  ′_             : T ∈ Γ
+                 ----------------
+                 → Γ ⊢ T
+
+  ƛ_             : (Γ , T₁) ⊢ T₂
+                 ----------------
+                 → Γ ⊢ (T₁ ⇒ T₂)
+
+  _·_            : Γ ⊢ (T₁ ⇒ T₂)
+                 → Γ ⊢ T₁
+                 ----------------
+                 → Γ ⊢ T₂
+\end{code}
+
+Helper function for declaring DeBruijn indices based
+on the provided natural number
+<DeBruijn-Helper>
+\begin{code}
+#_ : ∀ {Γ} → (n : ℕ) → {n∈Γ : True (suc n ≤? length Γ)} → Γ ⊢ lookup (toWitness n∈Γ)
+#_ n {n∈Γ} = ′ count (toWitness n∈Γ)
+\end{code}
+

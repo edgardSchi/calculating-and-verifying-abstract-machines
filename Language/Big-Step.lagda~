@@ -1,0 +1,38 @@
+--------------------------------------------------------------------------------
+-
+- Big-Step Structural Operational Semantics
+-
+--------------------------------------------------------------------------------
+
+\begin{code}
+module AbstractMachines.Language.Big-Step where
+
+open import Data.Nat
+
+open import AbstractMachines.Language.Types
+open import AbstractMachines.Language.BinaryOperation
+open import AbstractMachines.Language.Substitution
+\end{code}
+
+\begin{code}
+private variable
+  Γ : Context
+  T : Type
+  n : ℕ
+  ⊕ : ArithmeticOp
+  ⊙ : CompareOp
+\end{code}
+
+--------------------------------------------------------------------------------
+
+\begin{code}
+data _⊢_⇓_ : (Γ : Context) → (Γ ⊢ T) → {v : Γ ⊢ T} → Value v → Set where
+  True : Γ ⊢ true ⇓ V-true
+  False : Γ ⊢ false ⇓ V-false
+  If₁ : ∀ {e₁} {e₂ e₃ e₂' : Γ ⊢ T} {v : Value e₂'} → Γ ⊢ e₁ ⇓ V-true → Γ ⊢ e₂ ⇓ v → Γ ⊢ (if e₁ then e₂ else e₃) ⇓ v
+  If₂ : ∀ {e₁} {e₂ e₃ e₃' : Γ ⊢ T} {v : Value e₃'} → Γ ⊢ e₁ ⇓ V-false → Γ ⊢ e₃ ⇓ v → Γ ⊢ (if e₁ then e₂ else e₃) ⇓ v
+  N : Γ ⊢ (n N) ⇓ (V-N {n = n})
+  Arith : ∀ {e₁ e₂ : Γ ⊢ Nat} {v₁ v₂ : Γ ⊢ Nat} {n₁ : Value v₁} {n₂ : Value v₂} → Γ ⊢ e₁ ⇓ n₁ → Γ ⊢ e₂ ⇓ n₂ → Γ ⊢ (e₁ ⟨ ⊕ ⟩ᵃ e₂) ⇓ (V-N {_} {⟦ ⊕ ⟧ᵃ (N↑ v₁ n₁) (N↑ v₂ n₂)} )
+  Comp : ∀ {e₁ e₂ : Γ ⊢ Nat} {v₁ v₂ : Γ ⊢ Nat} {n₁ : Value v₁} {n₂ : Value v₂} → Γ ⊢ e₁ ⇓ n₁ → Γ ⊢ e₂ ⇓ n₂ → Γ ⊢ (e₁ ⟨ ⊙ ⟩ᶜ e₂) ⇓ (⟦⟧ᶜ-val {⊕ = ⊙} (N↑ v₁ n₁) (N↑ v₂ n₂))
+  --Let : ∀ {e₁ e₂} {e₁' : Γ ⊢ T} {v₁ : Value e₁'} → Γ ⊢ e₁ ⇓ v₁ → (let'_in'_) ⇓ ?
+\end{code}
